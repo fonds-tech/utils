@@ -1,17 +1,17 @@
 {
-  "name": "starter-ts",
+  "name": "@fonds/utils",
   "type": "module",
   "version": "1.0.0",
   "packageManager": "pnpm@10.20.0",
-  "description": "starter-ts",
+  "description": "@fonds/utils",
   "author": "fonds-tech",
   "license": "MIT",
-  "homepage": "https://github.com/fonds-tech/starter-ts#readme",
+  "homepage": "https://github.com/fonds-tech/utils#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fonds-tech/starter-ts.git"
+    "url": "git+https://github.com/fonds-tech/utils.git"
   },
-  "bugs": "https://github.com/fonds-tech/starter-ts/issues",
+  "bugs": "https://github.com/fonds-tech/utils/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {
@@ -35,13 +35,18 @@
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },
+  "dependencies": {
+    "lodash-es": "catalog:"
+  },
   "devDependencies": {
     "@antfu/ni": "catalog:",
     "@antfu/utils": "catalog:",
     "@fonds/eslint-config": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "bumpp": "catalog:",
     "eslint": "catalog:",
+    "eslint-plugin-format": "catalog:",
     "lint-staged": "catalog:",
     "simple-git-hooks": "catalog:",
     "tinyexec": "catalog:",
