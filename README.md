@@ -1,64 +1,57 @@
-<h1 align="center">🚀 starter-ts</h1>
+# @fonds/utils
 
-<div align="center">
+轻量的 TypeScript 工具集，聚焦常见的类型与格式校验（邮箱、手机号、URL、颜色值、空值等）。按需引入即可在浏览器或 Node.js 环境使用。
 
-一个现代化、功能完备的 TypeScript 项目入门模板。开箱即用，助你光速启动新项目！
-
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/fonds-tech/starter-ts/ci.yml?branch=main&logo=github&style=flat-square)](https://github.com/fonds-tech/starter-ts/actions/workflows/ci.yml)
-[![NPM Version](https://img.shields.io/npm/v/starter-ts?color=%23007ec6&logo=npm&style=flat-square)](https://www.npmjs.com/package/starter-ts)
-[![License](https://img.shields.io/github/license/fonds-tech/starter-ts?color=%234ac51c&style=flat-square)](./LICENSE)
-
-</div>
-
-## ✨ 特性
-
-- ⚡️ **[pnpm](https://pnpm.io/)** - 快速、高效的包管理工具。
-- 📦 **[tsdown](https://github.com/exo-info/tsdown)** - 超快的零配置 TypeScript 打包工具。
-- 🧪 **[Vitest](https://vitest.dev/)** - 由 Vite 驱动的极速单元测试框架。
-- 🎨 **[ESLint](https://eslint.org/)** - 强大的代码风格检查与自动修复。
-- 提交前自动格式化与检查。
-- 🤖 **GitHub Actions** - 预设 CI/CD 流程。
-- 릴 **[bumpp](https://github.com/antfu/bumpp)** - 轻松实现版本发布。
-
-## 📦 使用
-
-### 克隆到本地
-
-如果你喜欢这个模板，可以点击 "Use this template" 按钮来创建你自己的仓库。
-
-或者，通过以下命令将项目克隆到本地：
+## 安装
 
 ```bash
-git clone https://github.com/fonds-tech/starter-ts.git
-cd starter-ts
+pnpm add @fonds/utils
+# 或
+npm install @fonds/utils
 ```
 
-### 安装依赖
+## 快速上手
 
-推荐使用 `pnpm` 来安装依赖：
+```ts
+import { isEmail, isEmpty, isEqual, isPhoneNo } from '@fonds/utils'
 
-```bash
-pnpm install
+isEmail('user@example.com') // true
+isPhoneNo('13812345678') // true
+isEmpty({}) // true
+isEqual({ a: 1 }, { a: 1 }) // true
 ```
 
-## 📜 可用脚本
+## API 速览
 
-项目内置了一些常用的脚本，方便你进行开发、测试和构建。
+- `isDef(value)`：值不为 `undefined`、`null`、空字符串
+- `isHexColor(value)`：3/6 位十六进制颜色
+- `isEmail(value)`：邮箱格式
+- `isEqual(a, b)`：深度相等
+- `isPhoneNo(value)`：中国大陆手机号
+- `isUrl(url)`：URL 格式
+- `isImage(value)`：图片扩展名
+- `isDocument(value)`：常见文档扩展名
+- `isDate(value)`：可被 `Date` 解析
+- `isDigits(value)`：仅数字字符
+- `isPercentage(value)`：形如 `0%`、`12%` 的百分比
+- `isNumber(value)`：整数/小数/带千分位的数字
+- `isString(value)`：字符串类型
+- `isFunction(value)`：函数类型
+- `isBoolean(value)`：布尔类型
+- `isPromise(value)`：Promise 或类 Promise
+- `isArray<T>(value)`：数组
+- `isObject(value)`：对象（含数组，排除 `null`）
+- `isEmpty(value)`：空值判断（`undefined`、`null`、空串、`false`、`0`、`NaN`、空数组/对象）
+- `isNoEmpty(value)`：`!isEmpty`
+- `isContains(value, param)`：是否包含指定项/子串
 
-| 命令             | 描述                                      |
-| :--------------- | :---------------------------------------- |
-| `pnpm dev`       | 启动开发模式，文件变更时自动重新构建。    |
-| `pnpm build`     | 为生产环境构建和打包代码。                |
-| `pnpm test`      | 运行所有单元测试。                        |
-| `pnpm lint`      | 检查代码风格问题。                        |
-| `pnpm typecheck` | 对整个项目进行 TypeScript 类型检查。      |
-| `pnpm release`   | 自动提升版本号并打上 Git 标签，方便发布。 |
-| `pnpm start`     | 使用 `tsx` 直接运行 `src/index.ts`。      |
+## 开发与脚本
 
-## 🤝 贡献
+- `pnpm dev`：watch 模式构建
+- `pnpm build`：产物输出到 `dist/`（含类型）
+- `pnpm test`：使用 Vitest 运行单测
+- `pnpm lint` / `pnpm typecheck`：ESLint 与 TypeScript 类型检查
 
-欢迎各种形式的贡献！如果你有任何想法或建议，请随时提出 Issue 或提交 Pull Request。
+## 许可
 
-## 📄 许可证
-
-[MIT](./LICENSE) © fonds-tech
+MIT
