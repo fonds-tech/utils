@@ -40,17 +40,16 @@ describe('misc.ts', () => {
     expect(result.circular.self).toBe(result.circular)
   })
 
-  it('should merge plain objects and arrays without mutating sources', () => {
+  it('should merge into target while keeping sources untouched', () => {
     const target = { a: { x: 1 }, arr: [1], keep: 't' }
     const source = { a: { y: 2 }, arr: [2, 3], keep: 's', extra: true }
 
     const merged = merge(target, source)
 
     expect(merged).toEqual({ a: { x: 1, y: 2 }, arr: [1, 2, 3], keep: 's', extra: true })
-    expect(merged.a).not.toBe(target.a)
-    expect(merged.arr).not.toBe(target.arr)
-    expect(target).toEqual({ a: { x: 1 }, arr: [1], keep: 't' })
+    expect(merged).toBe(target)
     expect(source).toEqual({ a: { y: 2 }, arr: [2, 3], keep: 's', extra: true })
+    expect(target).toEqual({ a: { x: 1, y: 2 }, arr: [1, 2, 3], keep: 's', extra: true })
   })
 
   it('should merge multiple sources sequentially', () => {
@@ -66,7 +65,8 @@ describe('misc.ts', () => {
       flag: true,
       extra: 'ok',
     })
-    expect(target.arr).toEqual([0])
+    expect(merged).toBe(target)
+    expect(target.arr).toEqual([0, 1, 2, 3])
     expect(s1.arr).toEqual([1, 2])
     expect(s2.arr).toEqual([3])
   })

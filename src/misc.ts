@@ -119,16 +119,16 @@ export function clone<T>(value: T): T {
 }
 
 /**
- * 合并两个对象
- * @param target 目标对象
+ * 合并两个或多个对象（会直接修改 target）
+ * @param target 目标对象（会被修改）
  * @param sources 源对象列表
- * @returns 合并后的对象
+ * @returns 合并后的 target
  */
 export function merge<T extends PlainObject = PlainObject, S extends PlainObject[] = PlainObject[]>(
   target: T = {} as T,
   ...sources: S
 ): T & MergeObjects<S> {
-  const output: PlainObject = isPlainObject(target) ? clone(target) : {}
+  const output: PlainObject = isPlainObject(target) ? target : {}
 
   for (const source of sources) {
     if (!isPlainObject(source))
