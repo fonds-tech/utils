@@ -1,0 +1,62 @@
+{
+  "name": "starter-ts",
+  "type": "module",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.20.0",
+  "description": "starter-ts",
+  "author": "fonds-tech",
+  "license": "MIT",
+  "homepage": "https://github.com/fonds-tech/starter-ts#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fonds-tech/starter-ts.git"
+  },
+  "bugs": "https://github.com/fonds-tech/starter-ts/issues",
+  "keywords": [],
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint",
+    "prepublishOnly": "nr build",
+    "release": "bumpp",
+    "start": "tsx src/index.ts",
+    "test": "vitest",
+    "typecheck": "tsc",
+    "prepare": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@antfu/ni": "catalog:",
+    "@antfu/utils": "catalog:",
+    "@fonds/eslint-config": "catalog:",
+    "@types/node": "catalog:",
+    "bumpp": "catalog:",
+    "eslint": "catalog:",
+    "lint-staged": "catalog:",
+    "simple-git-hooks": "catalog:",
+    "tinyexec": "catalog:",
+    "tsdown": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "vitest-package-exports": "catalog:",
+    "yaml": "catalog:"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && npx lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
