@@ -14,18 +14,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-      - uses: actions/setup-node@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set node
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: pnpm
 
-      - run: pnpm i -g @antfu/ni
-      - run: nci
-      - run: nr lint
-      - run: nr typecheck
+      - name: Setup
+        run: npm i -g @antfu/ni
+
+      - name: Install
+        run: nci
+
+      - name: Build
+        run: nr build
+
+      - name: Lint
+        run: nr lint
+
+      - name: Typecheck
+        run: nr typecheck
 
   test:
     runs-on: ${{ matrix.os }}
@@ -38,16 +49,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Set node ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: pnpm
 
-      - run: pnpm i -g @antfu/ni
-      - run: nci
-      - run: nr build
-      - run: nr test
+      - name: Setup
+        run: npm i -g @antfu/ni
+
+      - name: Install
+        run: nci
+
+      - name: Build
+        run: nr build
+
+      - name: Test
+        run: nr test
