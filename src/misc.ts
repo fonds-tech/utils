@@ -128,7 +128,7 @@ export function merge<T extends PlainObject = PlainObject, S extends PlainObject
   target: T = {} as T,
   ...sources: S
 ): T & MergeObjects<S> {
-  const output: PlainObject = isPlainObject(target) ? target : {}
+  const output: PlainObject = target && typeof target === 'object' ? target : {}
 
   for (const source of sources) {
     if (!isPlainObject(source))

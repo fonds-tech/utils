@@ -71,6 +71,26 @@ describe('misc.ts', () => {
     expect(s2.arr).toEqual([3])
   })
 
+  it('should mutate target even when return value is ignored', () => {
+    const target = { a: { x: 1 }, b: 1 }
+    const source = { a: { y: 2 }, c: 3 }
+    const originalA = target.a
+
+    merge(target, source)
+
+    expect(target).toEqual({ a: { x: 1, y: 2 }, b: 1, c: 3 })
+    expect(target.a).toBe(originalA)
+  })
+
+  it('should work with proxy/ reactive-like targets', () => {
+    const raw = { nested: { x: 1 } }
+    const proxy = new Proxy(raw, {})
+    merge(proxy, { nested: { y: 2 }, b: 1 })
+
+    expect(raw).toEqual({ nested: { x: 1, y: 2 }, b: 1 })
+    expect(proxy).toEqual({ nested: { x: 1, y: 2 }, b: 1 })
+  })
+
   it('should debounce calls and use latest arguments', async () => {
     vi.useFakeTimers()
     const fn = vi.fn()
