@@ -13,6 +13,13 @@ export function delay(delay: number): Promise<void> {
 type AnyFunction = (...args: any[]) => any
 type PlainObject = Record<PropertyKey, any>
 type Timer = ReturnType<typeof setTimeout>
+type MergeObjects<S extends PlainObject[]> = S extends [infer H, ...infer R]
+  ? H extends PlainObject
+    ? R extends PlainObject[]
+      ? H & MergeObjects<R>
+      : H
+    : PlainObject
+  : PlainObject
 
 const structuredCloneFn = typeof globalThis.structuredClone === 'function' ? globalThis.structuredClone : null
 
@@ -114,35 +121,38 @@ export function clone<T>(value: T): T {
 /**
  * 合并两个对象
  * @param target 目标对象
- * @param source 源对象
+ * @param sources 源对象列表
  * @returns 合并后的对象
  */
-export function merge<T extends PlainObject = PlainObject, U extends PlainObject = PlainObject>(
+export function merge<T extends PlainObject = PlainObject, S extends PlainObject[] = PlainObject[]>(
   target: T = {} as T,
-  source: U = {} as U,
-): T & U {
+  ...sources: S
+): T & MergeObjects<S> {
   const output: PlainObject = isPlainObject(target) ? clone(target) : {}
-  if (!isPlainObject(source))
-    return output as T & U
 
-  for (const key of Reflect.ownKeys(source)) {
-    const incoming = (source as PlainObject)[key as keyof PlainObject]
-    const existing = output[key as keyof PlainObject]
-
-    if (Array.isArray(existing) && Array.isArray(incoming)) {
-      output[key as keyof PlainObject] = [...existing, ...incoming].map(item => clone(item)) as unknown as PlainObject[keyof PlainObject]
+  for (const source of sources) {
+    if (!isPlainObject(source))
       continue
-    }
 
-    if (isPlainObject(existing) && isPlainObject(incoming)) {
-      output[key as keyof PlainObject] = merge(existing, incoming) as unknown as PlainObject[keyof PlainObject]
-      continue
-    }
+    for (const key of Reflect.ownKeys(source)) {
+      const incoming = (source as PlainObject)[key as keyof PlainObject]
+      const existing = output[key as keyof PlainObject]
 
-    output[key as keyof PlainObject] = clone(incoming) as unknown as PlainObject[keyof PlainObject]
+      if (Array.isArray(existing) && Array.isArray(incoming)) {
+        output[key as keyof PlainObject] = [...existing, ...incoming].map(item => clone(item)) as unknown as PlainObject[keyof PlainObject]
+        continue
+      }
+
+      if (isPlainObject(existing) && isPlainObject(incoming)) {
+        output[key as keyof PlainObject] = merge(existing, incoming) as unknown as PlainObject[keyof PlainObject]
+        continue
+      }
+
+      output[key as keyof PlainObject] = clone(incoming) as unknown as PlainObject[keyof PlainObject]
+    }
   }
 
-  return output as T & U
+  return output as T & MergeObjects<S>
 }
 
 /**

@@ -53,6 +53,24 @@ describe('misc.ts', () => {
     expect(source).toEqual({ a: { y: 2 }, arr: [2, 3], keep: 's', extra: true })
   })
 
+  it('should merge multiple sources sequentially', () => {
+    const target = { a: { x: 1 }, arr: [0], flag: false }
+    const s1 = { a: { y: 2 }, arr: [1, 2], flag: true }
+    const s2 = { a: { z: 3 }, arr: [3], extra: 'ok' }
+
+    const merged = merge(target, s1, s2)
+
+    expect(merged).toEqual({
+      a: { x: 1, y: 2, z: 3 },
+      arr: [0, 1, 2, 3],
+      flag: true,
+      extra: 'ok',
+    })
+    expect(target.arr).toEqual([0])
+    expect(s1.arr).toEqual([1, 2])
+    expect(s2.arr).toEqual([3])
+  })
+
   it('should debounce calls and use latest arguments', async () => {
     vi.useFakeTimers()
     const fn = vi.fn()
