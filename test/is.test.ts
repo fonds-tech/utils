@@ -21,6 +21,7 @@ import {
   isFunction,
   isHexColor,
   isPercentage,
+  isPlainObject,
 } from '../src/is'
 
 describe('is.ts', () => {
@@ -114,5 +115,13 @@ describe('is.ts', () => {
     expect(isContains([1, 2, 3], 2)).toBe(true)
     expect(isContains('abc', 'z')).toBe(false)
     expect(isContains([1, 2, 3], 4)).toBe(false)
+  })
+
+  it('should detect plain objects', () => {
+    expect(isPlainObject({ a: 1 })).toBe(true)
+    expect(isPlainObject(Object.create(null))).toBe(true)
+    expect(isPlainObject([])).toBe(false)
+    expect(isPlainObject(new (class Foo {})())).toBe(false)
+    expect(isPlainObject(null)).toBe(false)
   })
 })

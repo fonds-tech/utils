@@ -114,6 +114,18 @@ export function isNumber(value: any): boolean {
 }
 
 /**
+ * 判断是否为普通对象（不含数组、函数、null）
+ * @param {unknown} value - 要校验的值
+ * @returns {boolean} 如果是普通对象则返回true
+ */
+export function isPlainObject(value: unknown): value is Record<PropertyKey, any> {
+  if (value === null || typeof value !== 'object')
+    return false
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
+}
+
+/**
  * 检查给定的值是否为字符串类型
  * @param {any} value - 要检查的值
  * @returns {boolean} 如果值是字符串类型，则返回true；否则返回false
