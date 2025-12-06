@@ -1,14 +1,5 @@
 import { isPlainObject } from './is'
-
-/**
- * 延时指定的时间后执行回调函数
- * @param delay - 延时时间（毫秒）
- */
-export function delay(delay: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delay)
-  })
-}
+import { cloneDeep, mergeWith } from 'lodash-es'
 
 type AnyFunction = (...args: any[]) => any
 type PlainObject = Record<PropertyKey, any>
@@ -21,92 +12,14 @@ type MergeObjects<S extends PlainObject[]> = S extends [infer H, ...infer R]
     : PlainObject
   : PlainObject
 
-const structuredCloneFn = typeof globalThis.structuredClone === 'function' ? globalThis.structuredClone : null
-
-function cloneWithCache<T>(value: T, cache: WeakMap<object, unknown>): T {
-  if (value === null || typeof value !== 'object')
-    return value
-  if (typeof value === 'function')
-    return value
-
-  if (structuredCloneFn) {
-    try {
-      return structuredCloneFn(value as unknown as object) as T
-    }
-    catch {
-      // 如果 structuredClone 不支持当前值则回退到下方逻辑
-    }
-  }
-
-  const cached = cache.get(value as object)
-  if (cached)
-    return cached as T
-
-  if (value instanceof Date) {
-    const cloned = new Date(value.getTime()) as T
-    cache.set(value, cloned)
-    return cloned
-  }
-
-  if (value instanceof RegExp) {
-    const cloned = new RegExp(value.source, value.flags) as T
-    cache.set(value, cloned)
-    return cloned
-  }
-
-  if (value instanceof Map) {
-    const cloned = new Map()
-    cache.set(value, cloned)
-    value.forEach((v, k) => {
-      cloned.set(cloneWithCache(k, cache), cloneWithCache(v, cache))
-    })
-    return cloned as unknown as T
-  }
-
-  if (value instanceof Set) {
-    const cloned = new Set()
-    cache.set(value, cloned)
-    value.forEach(v => cloned.add(cloneWithCache(v, cache)))
-    return cloned as unknown as T
-  }
-
-  if (Array.isArray(value)) {
-    const cloned = value.map(item => cloneWithCache(item, cache)) as unknown as T
-    cache.set(value, cloned as unknown as object)
-    return cloned
-  }
-
-  if (value instanceof ArrayBuffer) {
-    const cloned = value.slice(0) as T
-    cache.set(value, cloned)
-    return cloned
-  }
-
-  if (ArrayBuffer.isView(value)) {
-    const view = value as ArrayBufferView & { BYTES_PER_ELEMENT?: number, slice?: () => unknown }
-    const length = typeof view.BYTES_PER_ELEMENT === 'number' && view.BYTES_PER_ELEMENT > 0
-      ? view.byteLength / view.BYTES_PER_ELEMENT
-      : view.byteLength
-
-    let cloned: unknown
-    if (typeof view.slice === 'function') {
-      cloned = view.slice()
-    }
-    else {
-      const ViewCtor = value.constructor as new (buffer: ArrayBufferLike, byteOffset?: number, length?: number) => typeof value
-      cloned = new ViewCtor(view.buffer.slice(0), view.byteOffset, length)
-    }
-
-    cache.set(value as unknown as object, cloned as unknown as object)
-    return cloned as T
-  }
-
-  const cloned: PlainObject = Object.create(Object.getPrototypeOf(value))
-  cache.set(value as unknown as object, cloned)
-  for (const key of Reflect.ownKeys(value)) {
-    cloned[key as keyof PlainObject] = cloneWithCache((value as PlainObject)[key as keyof PlainObject], cache)
-  }
-  return cloned as T
+/**
+ * 延时指定的时间后执行回调函数
+ * @param delay - 延时时间（毫秒）
+ */
+export function delay(delay: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delay)
+  })
 }
 
 /**
@@ -115,7 +28,7 @@ function cloneWithCache<T>(value: T, cache: WeakMap<object, unknown>): T {
  * @returns 克隆后的对象
  */
 export function clone<T>(value: T): T {
-  return cloneWithCache(value, new WeakMap<object, unknown>())
+  return cloneDeep(value)
 }
 
 /**
@@ -128,31 +41,15 @@ export function merge<T extends PlainObject = PlainObject, S extends PlainObject
   target: T = {} as T,
   ...sources: S
 ): T & MergeObjects<S> {
-  const output: PlainObject = target && typeof target === 'object' ? target : {}
+  const output = (target && typeof target === 'object' ? target : {}) as PlainObject
 
-  for (const source of sources) {
-    if (!isPlainObject(source))
-      continue
+  const validSources = sources.filter(source => isPlainObject(source))
 
-    for (const key of Reflect.ownKeys(source)) {
-      const incoming = (source as PlainObject)[key as keyof PlainObject]
-      const existing = output[key as keyof PlainObject]
-
-      if (Array.isArray(existing) && Array.isArray(incoming)) {
-        output[key as keyof PlainObject] = [...existing, ...incoming].map(item => clone(item)) as unknown as PlainObject[keyof PlainObject]
-        continue
-      }
-
-      if (isPlainObject(existing) && isPlainObject(incoming)) {
-        output[key as keyof PlainObject] = merge(existing, incoming) as unknown as PlainObject[keyof PlainObject]
-        continue
-      }
-
-      output[key as keyof PlainObject] = clone(incoming) as unknown as PlainObject[keyof PlainObject]
+  return mergeWith(output, ...validSources, (objValue: any, srcValue: any) => {
+    if (Array.isArray(objValue) && Array.isArray(srcValue)) {
+      return [...objValue, ...srcValue].map(item => clone(item))
     }
-  }
-
-  return output as T & MergeObjects<S>
+  }) as T & MergeObjects<S>
 }
 
 /**

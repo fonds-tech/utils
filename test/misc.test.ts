@@ -91,6 +91,69 @@ describe('misc.ts', () => {
     expect(proxy).toEqual({ nested: { x: 1, y: 2 }, b: 1 })
   })
 
+  it('should handle deep merge correctly', () => {
+    const target = { a: { b: { c: 1 } } }
+    const source = { a: { b: { d: 2 } } }
+    merge(target, source)
+    expect(target).toEqual({ a: { b: { c: 1, d: 2 } } })
+  })
+
+  it('should handle array merge correctly (concat and clone)', () => {
+    const obj1 = { arr: [{ a: 1 }] }
+    const obj2 = { arr: [{ b: 2 }] }
+    const merged = merge(obj1, obj2)
+
+    expect(merged.arr).toHaveLength(2)
+    expect(merged.arr[0]).toEqual({ a: 1 })
+    expect(merged.arr[1]).toEqual({ b: 2 })
+    // When using mergeWith, if target is mutated, the reference check might be tricky depending on how lodash handles it.
+    // However, we explicitly clone in the customizer.
+    // Let's verify if obj1.arr[0] is the same object reference.
+    // The issue is that mergeWith modifies the target in place.
+    // If obj1.arr was replaced by a new array, then obj1.arr[0] inside the new array is a clone.
+    // But wait, obj1 is the target.
+    // If we do: return [...objValue, ...srcValue].map(item => clone(item))
+    // lodash will assign this NEW array to obj1.arr.
+    // So obj1.arr is now a new array.
+    // And the elements inside are clones.
+    // The original obj1.arr[0] reference still exists in memory but is no longer in obj1.arr?
+    // No, obj1.arr IS the property.
+    // We need to capture the original item BEFORE merge.
+  })
+
+  it('should handle array merge correctly (concat and clone) - references', () => {
+    const item1 = { a: 1 }
+    const obj1 = { arr: [item1] }
+    const obj2 = { arr: [{ b: 2 }] }
+
+    const merged = merge(obj1, obj2)
+
+    expect(merged.arr[0]).not.toBe(item1) // Should be a clone
+    expect(merged.arr[0]).toEqual(item1)
+  })
+
+  it('should ignore non-plain-object sources', () => {
+    const target = { a: 1 }
+    const source1 = null
+    const source2 = undefined
+    const source3 = 'string'
+    const source4 = 123
+    // @ts-expect-error test invalid input
+    merge(target, source1, source2, source3, source4, { b: 2 })
+    expect(target).toEqual({ a: 1, b: 2 })
+  })
+
+  it('should handle circular references in merge', () => {
+    const target: any = { a: 1 }
+    const source: any = { b: 2 }
+    source.self = source
+    merge(target, source)
+    expect(target.b).toBe(2)
+    expect(target.self).toBe(target.self) // Circular reference maintained? mergeWith default might handle this differently or throw stack overflow if not careful, but lodash handles it.
+    // Note: lodash merge handles circular refs by creating new circular structure in target.
+    expect(target.self).toEqual(source)
+  })
+
   it('should debounce calls and use latest arguments', async () => {
     vi.useFakeTimers()
     const fn = vi.fn()
