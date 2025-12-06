@@ -1,16 +1,36 @@
 import { isPlainObject } from './is'
-import { cloneDeep, mergeWith } from 'lodash-es'
+import { cloneDeep, merge as lodashMerge } from 'lodash-es'
 
 type AnyFunction = (...args: any[]) => any
 type PlainObject = Record<PropertyKey, any>
 type Timer = ReturnType<typeof setTimeout>
-type MergeObjects<S extends PlainObject[]> = S extends [infer H, ...infer R]
-  ? H extends PlainObject
-    ? R extends PlainObject[]
-      ? H & MergeObjects<R>
-      : H
-    : PlainObject
-  : PlainObject
+
+// 展开类型，使提示更友好
+type Prettify<T> = {
+  [K in keyof T]: T[K]
+} & {}
+
+// 深度合并两个类型
+type DeepMergeTwo<T, U> = T extends PlainObject
+  ? U extends PlainObject
+    ? Prettify<
+      {
+        [K in keyof T | keyof U]: K extends keyof U
+          ? K extends keyof T
+            ? DeepMergeTwo<T[K], U[K]> // 递归合并
+            : U[K] // 只在 U 中存在
+          : K extends keyof T
+            ? T[K] // 只在 T 中存在
+            : never
+      }
+    >
+    : U
+  : U
+
+// 递归合并多个对象
+type MergeObjects<T, S extends any[]> = S extends [infer H, ...infer R]
+  ? MergeObjects<DeepMergeTwo<T, H>, R>
+  : T
 
 /**
  * 延时指定的时间后执行回调函数
@@ -40,16 +60,12 @@ export function clone<T>(value: T): T {
 export function merge<T extends PlainObject = PlainObject, S extends PlainObject[] = PlainObject[]>(
   target: T = {} as T,
   ...sources: S
-): T & MergeObjects<S> {
+): MergeObjects<T, S> {
   const output = (target && typeof target === 'object' ? target : {}) as PlainObject
 
   const validSources = sources.filter(source => isPlainObject(source))
 
-  return mergeWith(output, ...validSources, (objValue: any, srcValue: any) => {
-    if (Array.isArray(objValue) && Array.isArray(srcValue)) {
-      return [...objValue, ...srcValue].map(item => clone(item))
-    }
-  }) as T & MergeObjects<S>
+  return lodashMerge(output, ...validSources) as MergeObjects<T, S>
 }
 
 /**

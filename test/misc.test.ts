@@ -46,10 +46,13 @@ describe('misc.ts', () => {
 
     const merged = merge(target, source)
 
-    expect(merged).toEqual({ a: { x: 1, y: 2 }, arr: [1, 2, 3], keep: 's', extra: true })
+    // Lodash default behavior: arrays are merged index by index.
+    // target.arr[0] (1) is overwritten by source.arr[0] (2)
+    // target.arr[1] is undefined, so it takes source.arr[1] (3)
+    expect(merged).toEqual({ a: { x: 1, y: 2 }, arr: [2, 3], keep: 's', extra: true })
     expect(merged).toBe(target)
     expect(source).toEqual({ a: { y: 2 }, arr: [2, 3], keep: 's', extra: true })
-    expect(target).toEqual({ a: { x: 1, y: 2 }, arr: [1, 2, 3], keep: 's', extra: true })
+    expect(target).toEqual({ a: { x: 1, y: 2 }, arr: [2, 3], keep: 's', extra: true })
   })
 
   it('should merge multiple sources sequentially', () => {
@@ -59,14 +62,16 @@ describe('misc.ts', () => {
 
     const merged = merge(target, s1, s2)
 
+    // s1 merges into target: arr becomes [1, 2] (0->1, undefined->2)
+    // s2 merges into target: arr becomes [3, 2] (1->3, 2 kept)
     expect(merged).toEqual({
       a: { x: 1, y: 2, z: 3 },
-      arr: [0, 1, 2, 3],
+      arr: [3, 2],
       flag: true,
       extra: 'ok',
     })
     expect(merged).toBe(target)
-    expect(target.arr).toEqual([0, 1, 2, 3])
+    expect(target.arr).toEqual([3, 2])
     expect(s1.arr).toEqual([1, 2])
     expect(s2.arr).toEqual([3])
   })
@@ -98,38 +103,29 @@ describe('misc.ts', () => {
     expect(target).toEqual({ a: { b: { c: 1, d: 2 } } })
   })
 
-  it('should handle array merge correctly (concat and clone)', () => {
+  it('should handle array merge correctly (default lodash behavior)', () => {
     const obj1 = { arr: [{ a: 1 }] }
     const obj2 = { arr: [{ b: 2 }] }
     const merged = merge(obj1, obj2)
 
-    expect(merged.arr).toHaveLength(2)
-    expect(merged.arr[0]).toEqual({ a: 1 })
-    expect(merged.arr[1]).toEqual({ b: 2 })
-    // When using mergeWith, if target is mutated, the reference check might be tricky depending on how lodash handles it.
-    // However, we explicitly clone in the customizer.
-    // Let's verify if obj1.arr[0] is the same object reference.
-    // The issue is that mergeWith modifies the target in place.
-    // If obj1.arr was replaced by a new array, then obj1.arr[0] inside the new array is a clone.
-    // But wait, obj1 is the target.
-    // If we do: return [...objValue, ...srcValue].map(item => clone(item))
-    // lodash will assign this NEW array to obj1.arr.
-    // So obj1.arr is now a new array.
-    // And the elements inside are clones.
-    // The original obj1.arr[0] reference still exists in memory but is no longer in obj1.arr?
-    // No, obj1.arr IS the property.
-    // We need to capture the original item BEFORE merge.
+    // Lodash default merge behavior for arrays:
+    // It merges index by index.
+    // arr[0] from source merges into arr[0] from target.
+    // Result length is max(target.length, source.length).
+    expect(merged.arr).toHaveLength(1)
+    expect(merged.arr[0]).toEqual({ a: 1, b: 2 })
   })
 
-  it('should handle array merge correctly (concat and clone) - references', () => {
+  it('should handle array merge correctly (default lodash behavior) - references', () => {
     const item1 = { a: 1 }
     const obj1 = { arr: [item1] }
     const obj2 = { arr: [{ b: 2 }] }
 
     const merged = merge(obj1, obj2)
-
-    expect(merged.arr[0]).not.toBe(item1) // Should be a clone
-    expect(merged.arr[0]).toEqual(item1)
+    // Lodash merge mutates deep properties.
+    // merged.arr[0] is strictly equal to item1 because lodash merges into it.
+    expect(merged.arr[0]).toBe(item1)
+    expect(merged.arr[0]).toEqual({ a: 1, b: 2 })
   })
 
   it('should ignore non-plain-object sources', () => {
@@ -152,6 +148,22 @@ describe('misc.ts', () => {
     expect(target.self).toBe(target.self) // Circular reference maintained? mergeWith default might handle this differently or throw stack overflow if not careful, but lodash handles it.
     // Note: lodash merge handles circular refs by creating new circular structure in target.
     expect(target.self).toEqual(source)
+  })
+
+  it('should mutate original object and update all references', () => {
+    const original = { a: 1, nested: { x: 1 } }
+    const alias = original
+    const anotherRef = original.nested
+
+    merge(original, { a: 2, nested: { y: 2 } })
+
+    // Check if alias sees the changes (it should, as it's the same reference)
+    expect(alias).toEqual({ a: 2, nested: { x: 1, y: 2 } })
+    expect(alias).toBe(original)
+
+    // Check if nested object reference is preserved (lodash merge mutation behavior)
+    expect(original.nested).toBe(anotherRef)
+    expect(anotherRef).toEqual({ x: 1, y: 2 })
   })
 
   it('should debounce calls and use latest arguments', async () => {
