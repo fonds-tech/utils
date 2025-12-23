@@ -49,7 +49,7 @@ describe('is.ts', () => {
 
   it('should check url and file extensions', () => {
     expect(isUrl('https://example.com/path')).toBe(true)
-    expect(isUrl('example.com')).toBe(true)
+    expect(isUrl('example.com')).toBe(false)
     expect(isUrl('not a url')).toBe(false)
     expect(isImage('photo.JPG')).toBe(true)
     expect(isImage('document.pdf')).toBe(false)

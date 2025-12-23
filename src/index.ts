@@ -1,3 +1,5 @@
+export * from './async'
+export * from './function'
 export * from './is'
-export * from './misc'
 export * from './mitt'
+export * from './object'

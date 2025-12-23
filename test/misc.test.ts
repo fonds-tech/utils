@@ -1,5 +1,7 @@
+import { delay } from '../src/async'
+import { clone, merge } from '../src/object'
+import { debounce, throttling } from '../src/function'
 import { it, vi, expect, describe } from 'vitest'
-import { clone, delay, merge, debounce, throttling } from '../src/misc'
 
 describe('misc.ts', () => {
   it('should deep clone complex structures and keep circular refs intact', () => {

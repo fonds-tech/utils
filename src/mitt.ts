@@ -7,9 +7,29 @@ type EventArgs<M extends EventMap, K extends EventName<M>> = M[K] extends unknow
 
 const events = new Map<string, AnyHandler[]>()
 
+/**
+ * Mitt: 一个微型的全局事件发射器/监听器
+ *
+ * @template Events - 事件名与其对应参数列表的映射类型
+ *
+ * @example
+ * ```ts
+ * const emitter = new Mitt<{
+ *   'user:login': [user: { name: string }]
+ *   'data:update': []
+ * }>()
+ *
+ * emitter.on('user:login', (user) => console.log(user.name))
+ * emitter.emit('user:login', { name: 'Alice' })
+ * ```
+ */
 export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
   private namespace: string | number
 
+  /**
+   * 创建 Mitt 实例
+   * @param name - 命名空间名称，默认为 'global'
+   */
   constructor(name: string | number = 'global') {
     this.namespace = name
   }
@@ -26,8 +46,16 @@ export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
   }
 
   /**
-   * 初始化事件
-   * @param list 事件列表
+   * 批量初始化事件监听
+   *
+   * @param list - 事件名与处理函数映射的对象
+   *
+   * @example
+   * ```ts
+   * emitter.init({
+   *   'data:update': () => console.log('updated')
+   * })
+   * ```
    */
   init(list?: Partial<Record<EventName<Events>, Handler<EventArgs<Events, EventName<Events>>>>>): void {
     if (!list)
@@ -42,8 +70,15 @@ export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
 
   /**
    * 监听事件
-   * @param name 事件名称
-   * @param handler 事件处理函数
+   *
+   * @param name - 事件名称。传入 '*' 可监听所有事件
+   * @param handler - 事件处理函数
+   *
+   * @example
+   * ```ts
+   * emitter.on('login', (user) => console.log(user))
+   * emitter.on('*', (type, data) => console.log(type, data))
+   * ```
    */
   on(name: '*', handler: Handler<[string, ...any[]]>): void
   on<K extends EventName<Events>>(name: K, handler: Handler<EventArgs<Events, K>>): void
@@ -60,9 +95,17 @@ export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
   }
 
   /**
-   * 监听事件，但仅触发一次，在第一次触发之后移除该监听器
-   * @param name 事件名称
-   * @param handler 事件处理函数
+   * 监听事件，但仅触发一次
+   *
+   * 在第一次触发之后会自动移除该监听器。
+   *
+   * @param name - 事件名称
+   * @param handler - 事件处理函数
+   *
+   * @example
+   * ```ts
+   * emitter.once('init', () => console.log('Initialized'))
+   * ```
    */
   once(name: '*', handler: Handler<[string, ...any[]]>): void
   once<K extends EventName<Events>>(name: K, handler: Handler<EventArgs<Events, K>>): void
@@ -85,8 +128,17 @@ export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
 
   /**
    * 移除事件监听
-   * @param name 事件名称
-   * @param handler 事件处理函数，如果不传，则移除该事件名称的所有处理函数
+   *
+   * @param name - 事件名称
+   * @param handler - 要移除的处理函数。如果不传，则移除该事件名下的所有监听器
+   *
+   * @example
+   * ```ts
+   * const onLogin = () => {}
+   * emitter.on('login', onLogin)
+   * emitter.off('login', onLogin) // 移除特定监听
+   * emitter.off('login') // 移除所有 login 监听
+   * ```
    */
   off<K extends EventName<Events>>(name: K, handler?: Handler<EventArgs<Events, K>>): void {
     const key = this.name(name)
@@ -103,9 +155,15 @@ export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
   }
 
   /**
-   * 触发事件
-   * @param name 事件名称
-   * @param args 事件参数
+   * 触发指定的事件
+   *
+   * @param name - 事件名
+   * @param args - 传递给处理函数的参数序列
+   *
+   * @example
+   * ```ts
+   * emitter.emit('user:login', { name: 'Bob' })
+   * ```
    */
   emit<K extends EventName<Events>>(name: K, ...args: EventArgs<Events, K>): void {
     const key = this.name(name)
@@ -121,7 +179,12 @@ export class Mitt<Events extends EventMap = Record<string, unknown[]>> {
   }
 
   /**
-   * 清空所有事件
+   * 清空当前实例命名空间下的所有事件监听
+   *
+   * @example
+   * ```ts
+   * emitter.clear()
+   * ```
    */
   clear(): void {
     const prefix = `${this.namespace}:`
